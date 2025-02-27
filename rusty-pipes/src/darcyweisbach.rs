@@ -27,9 +27,16 @@ pub fn head_loss(length:f64, velocity:f64, diameter:f64, friction:f64) -> f64 {
     head_loss
 }
 
-pub fn pressure_loss(head_loss:f64) -> f64{
-    let g = 32.174; // gravity constant in ft/s^2
-    let rho = 62.4; // density of water in lb/ft^3
-    let pressure_loss = (g * rho * head_loss) / 1728.0;
+pub fn pressure_loss(length:f64, velocity:f64, diameter:f64) -> f64{
+    // let g = 32.174; // gravity constant in ft/s^2
+    let rho = 0.0361; // density of water in lb/in^3
+    let mew = 0.000020337; //dynamic viscosity lbf*s/ft^2, from https://www.engineeringtoolbox.com/water-dynamic-kinematic-viscosity-d_596.html
+    let reynolds_number = (rho * velocity * (diameter)) / (mew / 144.0);
+    let roughness = 0.00025;
+    println!("reynolds number is {}", reynolds_number);
+    let numerator = ((roughness / diameter) / 3.7) + (5.74 / reynolds_number.powf(0.9));
+    let friction = 0.25 / ((numerator.log10()) * (numerator.log10()));
+    println!("friciton is {}", friction);
+    let pressure_loss = length * (friction * (rho / 2.0) * ((velocity * velocity) / diameter));
     pressure_loss
 }
