@@ -27,6 +27,7 @@ pub fn head_loss(length:f64, velocity:f64, diameter:f64, friction:f64) -> f64 {
     head_loss
 }
 
+// Application of the Darcy-Weisbach equation to find pressure loss across the pipe.
 pub fn pressure_loss(length:f64, velocity:f64, diameter:f64) -> f64{
     // let g = 32.174; // gravity constant in ft/s^2
     let rho = 0.0361; // density of water in lb/in^3
