@@ -1,5 +1,15 @@
 use std::f64;
 
+// a struct representing a node, which is a junction between pipes
+pub struct Node {
+    pub pressure: f64,
+    pub flow: f64,
+    pub connections: usize,
+    pub connecting_pipes: Vec<f64>
+}
+
+
+
 // This function takes a flow-rate in Gallons per minute and converts to cubic feet per second
 pub fn convert_flowrate(flow: f64) -> f64 {
     let cubic_feet_per_second = (flow * 0.1337) / 60.0;

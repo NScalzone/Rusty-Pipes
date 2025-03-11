@@ -7,12 +7,22 @@ use std::fs::File;
 
 fn main() -> Result<(), Box<dyn Error>>{
 
+    let columns = 4;
     // Read an array back from the file
     let file = File::open("/Users/nicholasscalzone/Documents/COMPUTER SCIENCE CLASSES/Rust Programming/Rusty-Pipes/rusty-pipes/pipedata.csv")?;
     let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
-    let array_read: Array2<f64> = reader.deserialize_array2((5, 4))?;
+    let array_read: Array2<f64> = reader.deserialize_array2_dynamic()?;
 
     println!("{}", array_read);
+    println!("{}", array_read.len());
+    let total_vals = array_read.len();
+    let rows:usize = total_vals / columns;
+    println!("{} rows, {} columns", rows, columns);
+    for i in 0..rows{
+        for j in 0..columns{
+            println!("{} is the {}th element\n",array_read[(i,j)], i);
+        }
+    }
     Ok(())
     // Ensure that we got the original array back
     
