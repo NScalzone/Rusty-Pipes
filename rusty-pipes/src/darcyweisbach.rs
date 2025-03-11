@@ -1,14 +1,83 @@
+use ndarray::Array2;
 use std::f64;
 
 // a struct representing a node, which is a junction between pipes
+#[derive(Clone)]
 pub struct Node {
+    pub node_number: f64,
     pub pressure: f64,
     pub flow: f64,
     pub connections: usize,
-    pub connecting_pipes: Vec<f64>
+    pub connecting_pipes: Vec<f64>,
+}
+impl Node{
+    pub fn update_flow(&mut self, to_add:f64){
+        self.flow += to_add;
+    }  
+
+    pub fn update_pressure(&mut self, to_add:f64){
+        self.pressure += to_add;
+    }
+
+    pub fn add_connection(&mut self, pipe_to_add:f64){
+        self.connections += 1;
+        self.connecting_pipes.push(pipe_to_add);
+    }
 }
 
+// #[derive(Clone)]
+// pub struct Pipe {
+//     pub pipe_number: f64,
+//     pub length: f64,
+//     pub diameter: f64,
+//     pub start_node: f64,
+//     pub end_node: f64,
+// }
 
+pub fn node_constructor(
+    node_number: f64,
+    pressure: f64,
+    flow: f64,
+    connections: usize,
+    connecting_pipes: Vec<f64>,
+) -> Node {
+    let temp = Node {
+        node_number,
+        pressure,
+        flow,
+        connections,
+        connecting_pipes,
+    };
+    temp
+}
+
+pub fn display_node(node: &Node){
+    println!("Node Number: {}\nPressure: {} psi\nFlow Rate: {} GPM\n# of Pipe Connections: {}\nConnects to pipes:",node.node_number, node.pressure, node.flow, node.connections);
+    for i in &node.connecting_pipes{
+        println!("{}", i);
+    }
+}
+
+// pub assign_nodes (pipedata:Array2<f64>, mut start_pressure:f64, mut start_flow:f64) -> Vec<Node>{
+//     let mut system = Vec::new();
+//     let mut in_system = Vec::new();
+//     let columns = 5;
+//     let rows:usize = total_vals / columns;
+//     for i in 0..rows{
+//         if in_system.contains(i){
+            
+//         }
+//         else{
+//             if pipedata[(i,0)] != 1.0{
+//                 start_pressure = 0;
+//                 start_flow = 0;
+//             }
+//             // for new node, connections is 1 (since we'll be adding as we go)
+//             let mut connecting_pipes = vec![pipedata[(i,(columns-1))]];
+//             let new_node = node_constructor(pipedata[(i,0), start_pressure, start_flow, 1, connecting_pipes]);
+//         }
+//     }
+// }
 
 // This function takes a flow-rate in Gallons per minute and converts to cubic feet per second
 pub fn convert_flowrate(flow: f64) -> f64 {
@@ -24,21 +93,21 @@ pub fn get_area(diameter: f64) -> f64 {
 }
 
 // This takes in a flow rate in cubic feet per second, and an area in square feet, and returns velocity in feet per second
-pub fn get_velocity(flow: f64, area: f64) -> f64{
+pub fn get_velocity(flow: f64, area: f64) -> f64 {
     let velocity = flow / area;
     velocity
 }
 
 // This takes length in feet, velocity in ft/s, diameter in inches, and friction (unitless coefficient), and returns head loss in feet of head
-pub fn head_loss(length:f64, velocity:f64, diameter:f64, friction:f64) -> f64 {
+pub fn head_loss(length: f64, velocity: f64, diameter: f64, friction: f64) -> f64 {
     let g = 32.174; // gravity constant in ft/s^2
     let d = diameter / 12.0; // diameter in feet for unit consistency
-    let head_loss = friction * ((length * (velocity * velocity))/(2.0 * g * d));
+    let head_loss = friction * ((length * (velocity * velocity)) / (2.0 * g * d));
     head_loss
 }
 
 // Application of the Darcy-Weisbach equation to find pressure loss across the pipe.
-pub fn pressure_loss(length:f64, velocity:f64, diameter:f64) -> f64{
+pub fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
     // let g = 32.174; // gravity constant in ft/s^2
     let rho = 0.0361; // density of water in lb/in^3
     let mew = 0.000020337; //dynamic viscosity lbf*s/ft^2, from https://www.engineeringtoolbox.com/water-dynamic-kinematic-viscosity-d_596.html
