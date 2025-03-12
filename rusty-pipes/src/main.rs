@@ -28,23 +28,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     // for i in system {
     //     println!("{}", i);
     // }
-    let mut testnode = darcyweisbach::node_constructor(1.0, 0.0, 0.0, 2, vec![1.0,2.0]);
-    let mut testnode2 = darcyweisbach::node_constructor(2.0,0.0, 0.0, 2, vec![4.0,5.0]);
-    darcyweisbach::display_node(&testnode);
-    testnode.update_flow(2.0);
-    testnode.update_pressure(35.0);
-    testnode.add_connection(3.0);
-    darcyweisbach::display_node(&testnode);
+    // let mut testnode = darcyweisbach::node_constructor(1.0, 0.0, 0.0, 2, vec![1.0,2.0]);
+    // let mut testnode2 = darcyweisbach::node_constructor(2.0,0.0, 0.0, 2, vec![4.0,5.0]);
+    // darcyweisbach::display_node(&testnode);
+    // testnode.update_flow(2.0);
+    // testnode.update_pressure(35.0);
+    // testnode.add_connection(3.0);
+    // darcyweisbach::display_node(&testnode);
 
     println!("Creating vector of nodes");
 
     let mut system: Vec<darcyweisbach::Node> = Vec::new();
-    system.push(testnode);
-    system.push(testnode2);
+    let mut nodenum = 1.0;
+    for i in 0..4{
+        let mut testnode = darcyweisbach::node_constructor(nodenum, 0.0, 0.0, 2, vec![1.0,2.0]);
+        system.push(testnode);
+        nodenum += 1.0;
+    }
+    
+    // system.push(testnode2);
 
-    darcyweisbach::display_node(&system[0]);
-
-
+    for j in 0..4{
+        darcyweisbach::display_node(&system[j]);
+    }
 
     Ok(())
     // Ensure that we got the original array back
