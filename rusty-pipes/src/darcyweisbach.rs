@@ -10,29 +10,20 @@ pub struct Node {
     pub connections: usize,
     pub connecting_pipes: Vec<f64>,
 }
-impl Node{
-    pub fn update_flow(&mut self, to_add:f64){
+impl Node {
+    pub fn update_flow(&mut self, to_add: f64) {
         self.flow += to_add;
-    }  
+    }
 
-    pub fn update_pressure(&mut self, to_add:f64){
+    pub fn update_pressure(&mut self, to_add: f64) {
         self.pressure += to_add;
     }
 
-    pub fn add_connection(&mut self, pipe_to_add:f64){
+    pub fn add_connection(&mut self, pipe_to_add: f64) {
         self.connections += 1;
         self.connecting_pipes.push(pipe_to_add);
     }
 }
-
-// #[derive(Clone)]
-// pub struct Pipe {
-//     pub pipe_number: f64,
-//     pub length: f64,
-//     pub diameter: f64,
-//     pub start_node: f64,
-//     pub end_node: f64,
-// }
 
 pub fn node_constructor(
     node_number: f64,
@@ -51,11 +42,73 @@ pub fn node_constructor(
     temp
 }
 
-pub fn display_node(node: &Node){
-    println!("Node Number: {}\nPressure: {} psi\nFlow Rate: {} GPM\n# of Pipe Connections: {}\nConnects to pipes:",node.node_number, node.pressure, node.flow, node.connections);
-    for i in &node.connecting_pipes{
-        println!("{}", i);
+#[derive(Clone)]
+pub struct Pipe {
+    pub pipe_number: f64,
+    pub length: f64,
+    pub diameter: f64,
+    pub velocity: f64,
+    pub flow: f64,
+    pub start_node: f64,
+    pub end_node: f64,
+}
+impl Pipe {
+    pub fn update_flow(&mut self, to_add: f64) {
+        self.flow += to_add;
     }
+}
+
+pub fn pipe_constructor(
+    pipe_number: f64,
+    length: f64,
+    diameter: f64,
+    velocity: f64,
+    flow: f64,
+    start_node: f64,
+    end_node: f64,
+) -> Pipe {
+    let temp = Pipe {
+        pipe_number,
+        length,
+        diameter,
+        velocity,
+        flow,
+        start_node,
+        end_node,
+    };
+    temp
+}
+
+pub fn display_node(node: &Node) {
+    println!("Node Number: {}
+    Pressure: {} psi
+    Flow Rate: {} GPM
+    # of Pipe Connections: {}
+    Connects to pipes:",
+    node.node_number, 
+    node.pressure, 
+    node.flow, 
+    node.connections);
+    for i in &node.connecting_pipes {
+        println!("\t{}", i);
+    }
+}
+
+pub fn display_pipe(pipe: &Pipe) {
+    println!("pipe_number: {}
+        length: {}
+        diameter: {}
+        velocity: {}
+        flow: {}
+        start_node: {}
+        end_node: {}", 
+        pipe.pipe_number, 
+        pipe.length, 
+        pipe.diameter, 
+        pipe.velocity, 
+        pipe.flow, 
+        pipe.start_node, 
+        pipe.end_node);
 }
 
 // pub assign_nodes (pipedata:Array2<f64>, mut start_pressure:f64, mut start_flow:f64) -> Vec<Node>{
@@ -65,7 +118,7 @@ pub fn display_node(node: &Node){
 //     let rows:usize = total_vals / columns;
 //     for i in 0..rows{
 //         if in_system.contains(i){
-            
+
 //         }
 //         else{
 //             if pipedata[(i,0)] != 1.0{
