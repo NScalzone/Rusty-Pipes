@@ -5,7 +5,7 @@ use ndarray_csv::Array2Reader;
 use std::error::Error;
 use std::fs::File;
 use std::env;
-use std::str::FromStr;
+
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -41,25 +41,65 @@ fn main() -> Result<(), Box<dyn Error>> {
         let diameter = array_read[(i, 2)];
         let end_node = array_read[(i, 3)];
         let pipe_number = array_read[(i, 4)];
-        let mut newpipe = darcyweisbach::pipe_constructor(pipe_number, pipe_length, diameter, 0.0, 0.0, start_node, end_node);
+        let mut pipe_flow = 0.0;
+        if i == 0{
+            pipe_flow = flow;
+        }
+        let newpipe = darcyweisbach::pipe_constructor(pipe_number, pipe_length, diameter, 0.0, pipe_flow, start_node, end_node);
         pipes.push(newpipe);
     }
 
     for i in 0..pipes.len(){
-        // darcyweisbach::display_pipe(&pipes[i]);
+        
         let mut add_node = true;
-        for k in &nodes {
+        for k in &mut nodes {
             if k.node_number == pipes[i].start_node {
                 add_node = false;
+                k.add_connection(pipes[i].pipe_number);
             }
         }
         if add_node {
-
+            let node_number = pipes[i].start_node;
+            let mut node_pressure = 0.0;
+            let mut node_flow = 0.0;
+            if node_number == 1.0{
+                node_pressure = pressure;
+                node_flow = flow;
+            }
+            let connections = 1;
+            let connecting_pipes = vec![pipes[i].pipe_number];
+            let newnode = darcyweisbach::node_constructor(node_number, node_pressure, node_flow, connections, connecting_pipes);
+            nodes.push(newnode);
         }
     }
 
+    for i in 0..pipes.len(){
+        let mut add_node = true;
+        for k in &mut nodes {
+            if k.node_number == pipes[i].end_node {
+                add_node = false;
 
+            }
+        }
+        if add_node {
+            let node_number = pipes[i].end_node;
+            let node_pressure = 0.0;
+            let node_flow = 0.0;
+            let connections = 1;
+            let connecting_pipes = vec![pipes[i].pipe_number];
+            let newnode = darcyweisbach::node_constructor(node_number, node_pressure, node_flow, connections, connecting_pipes);
+            nodes.push(newnode);
+        }
+    }
 
+    darcyweisbach::calculate_system(&mut pipes, &mut nodes);
+
+    for i in 0..pipes.len(){
+        darcyweisbach::display_pipe(&pipes[i]);
+    }
+    for i in 0..nodes.len(){
+        darcyweisbach::display_node(&nodes[i]);
+    }
 
     // let mut system = Vec::with_capacity(rows);
     // system.push(1);
