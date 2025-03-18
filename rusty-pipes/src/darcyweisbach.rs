@@ -83,35 +83,36 @@ pub fn pipe_constructor(
 }
 
 pub fn display_node(node: &Node) {
-    println!("Node Number: {}
+    println!(
+        "Node Number: {}
     Pressure: {} psi
     Flow Rate: {} GPM
     # of Pipe Connections: {}
     Connects to pipes:",
-    node.node_number, 
-    node.pressure, 
-    node.flow, 
-    node.connections);
+        node.node_number, node.pressure, node.flow, node.connections
+    );
     for i in &node.connecting_pipes {
         println!("\t{}", i);
     }
 }
 
 pub fn display_pipe(pipe: &Pipe) {
-    println!("pipe_number: {}
+    println!(
+        "pipe_number: {}
         length: {} ft
         diameter: {} inches
         velocity: {} ft/s
         flow: {} GPM
         start_node: {}
-        end_node: {}", 
-        pipe.pipe_number, 
-        pipe.length, 
-        pipe.diameter, 
-        pipe.velocity, 
-        pipe.flow, 
-        pipe.start_node, 
-        pipe.end_node);
+        end_node: {}",
+        pipe.pipe_number,
+        pipe.length,
+        pipe.diameter,
+        pipe.velocity,
+        pipe.flow,
+        pipe.start_node,
+        pipe.end_node
+    );
 }
 
 // This function takes a flow-rate in Gallons per minute and converts to cubic feet per second
@@ -153,35 +154,35 @@ pub fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
     let mew = 0.000020337; //dynamic viscosity lbf*s/ft^2, from https://www.engineeringtoolbox.com/water-dynamic-kinematic-viscosity-d_596.html
     let reynolds_number = (rho * velocity * (diameter)) / (mew / 144.0);
     let roughness = 0.00025;
-    println!("reynolds number is {}", reynolds_number);
+    // println!("reynolds number is {}", reynolds_number);
     let numerator = ((roughness / diameter) / 3.7) + (5.74 / reynolds_number.powf(0.9));
     let friction = 0.25 / ((numerator.log10()) * (numerator.log10()));
-    println!("friciton is {}", friction);
+    // println!("friciton is {}", friction);
     let pressure_loss = length * (friction * (rho / 2.0) * ((velocity * velocity) / diameter));
     pressure_loss
 }
 
-fn find_pipe_index(pipes:&Vec<Pipe>, pipe_number:f64) -> usize{
+fn find_pipe_index(pipes: &Vec<Pipe>, pipe_number: f64) -> usize {
     let mut index: usize = 0;
-    for i in 0..pipes.len(){
-        if pipes[i].pipe_number == pipe_number{
+    for i in 0..pipes.len() {
+        if pipes[i].pipe_number == pipe_number {
             index = i;
         }
     }
     index
 }
 
-fn find_node_index(nodes:&Vec<Node>, node_number:f64) -> usize{
+fn find_node_index(nodes: &Vec<Node>, node_number: f64) -> usize {
     let mut index: usize = 0;
-    for i in 0..nodes.len(){
-        if nodes[i].node_number == node_number{
+    for i in 0..nodes.len() {
+        if nodes[i].node_number == node_number {
             index = i;
         }
     }
     index
 }
 
-fn divide_flow_2_ways(diameter1:f64, diameter2:f64, flow:f64)->f64{
+fn divide_flow_2_ways(diameter1: f64, diameter2: f64, flow: f64) -> f64 {
     let area1 = get_area(diameter1);
     let area2 = get_area(diameter2);
     let total_area = area1 + area2;
@@ -190,7 +191,7 @@ fn divide_flow_2_ways(diameter1:f64, diameter2:f64, flow:f64)->f64{
     pipe_1_flow
 }
 
-fn divide_flow_3_ways(diameter1:f64, diameter2:f64, diameter3:f64, flow:f64)->f64{
+fn divide_flow_3_ways(diameter1: f64, diameter2: f64, diameter3: f64, flow: f64) -> f64 {
     let area1 = get_area(diameter1);
     let area2 = get_area(diameter2);
     let area3 = get_area(diameter3);
@@ -200,93 +201,129 @@ fn divide_flow_3_ways(diameter1:f64, diameter2:f64, diameter3:f64, flow:f64)->f6
     pipe_1_flow
 }
 
-pub fn calculate_system(pipes: &mut Vec<Pipe>, nodes: &mut Vec<Node>){
-    // for i in 0..2{
-    for i in 0..nodes.len(){
+pub fn calculate_system(pipes: &mut Vec<Pipe>, nodes: &mut Vec<Node>) {
+    for i in 0..nodes.len() {
         // node 1 will have pressure/flow values
-        if nodes[i].connections == 1{
+        if nodes[i].connections == 1 {
             let pipe_out = nodes[i].connecting_pipes[0];
             let pipe_index = find_pipe_index(pipes, pipe_out);
-            if pipes[pipe_index].flow == 0.0{
+            if pipes[pipe_index].flow == 0.0 {
                 pipes[pipe_index].update_flow(nodes[i].flow);
             }
             let velocity = get_velocity(pipes[pipe_index].flow, pipes[pipe_index].diameter);
             pipes[pipe_index].update_velocity(velocity);
-            let pressure_loss = pressure_loss(pipes[pipe_index].length, pipes[pipe_index].velocity, pipes[pipe_index].diameter);
+            let pressure_loss = pressure_loss(
+                pipes[pipe_index].length,
+                pipes[pipe_index].velocity,
+                pipes[pipe_index].diameter,
+            );
             let next_node_pressure = nodes[i].pressure - pressure_loss;
             let next_node = find_node_index(nodes, pipes[pipe_index].end_node);
-            nodes[next_node].update_pressure(next_node_pressure);
-            nodes[next_node].update_flow(pipes[pipe_index].flow);
-        }
-        
-        else{
-            if nodes[i].connections == 2{
+            if nodes[i].node_number != nodes[next_node].node_number {
+                nodes[next_node].update_pressure(next_node_pressure);
+                nodes[next_node].update_flow(pipes[pipe_index].flow);
+            }
+        } else {
+            if nodes[i].connections == 2 {
                 let first_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[0]);
                 let second_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[1]);
-                let first_pipe_flow = divide_flow_2_ways(pipes[first_pipe].diameter, pipes[second_pipe].diameter, nodes[i].flow);
-                let second_pipe_flow = nodes[i].flow -first_pipe_flow;
+                let first_pipe_flow = divide_flow_2_ways(
+                    pipes[first_pipe].diameter,
+                    pipes[second_pipe].diameter,
+                    nodes[i].flow,
+                );
+                let second_pipe_flow = nodes[i].flow - first_pipe_flow;
                 pipes[first_pipe].update_flow(first_pipe_flow);
-                let first_veloctiy = get_velocity(pipes[first_pipe].flow, pipes[first_pipe].diameter);
+                let first_veloctiy =
+                    get_velocity(pipes[first_pipe].flow, pipes[first_pipe].diameter);
                 pipes[first_pipe].update_velocity(first_veloctiy);
                 pipes[second_pipe].update_flow(second_pipe_flow);
-                let second_velocity = get_velocity(pipes[second_pipe].flow, pipes[second_pipe].diameter);
+                let second_velocity =
+                    get_velocity(pipes[second_pipe].flow, pipes[second_pipe].diameter);
                 pipes[second_pipe].update_velocity(second_velocity);
 
-                let first_pressure_loss = pressure_loss(pipes[first_pipe].length, pipes[first_pipe].velocity, pipes[first_pipe].diameter);
+                let first_pressure_loss = pressure_loss(
+                    pipes[first_pipe].length,
+                    pipes[first_pipe].velocity,
+                    pipes[first_pipe].diameter,
+                );
                 let first_next_node_pressure = nodes[i].pressure - first_pressure_loss;
                 let first_next_node = find_node_index(nodes, pipes[first_pipe].end_node);
                 nodes[first_next_node].update_pressure(first_next_node_pressure);
                 nodes[first_next_node].update_flow(pipes[first_pipe].flow);
 
-                let second_pressure_loss = pressure_loss(pipes[second_pipe].length, pipes[second_pipe].velocity, pipes[second_pipe].diameter);
+                let second_pressure_loss = pressure_loss(
+                    pipes[second_pipe].length,
+                    pipes[second_pipe].velocity,
+                    pipes[second_pipe].diameter,
+                );
                 let second_next_node_pressure = nodes[i].pressure - second_pressure_loss;
                 let second_next_node = find_node_index(nodes, pipes[second_pipe].end_node);
                 nodes[second_next_node].update_pressure(second_next_node_pressure);
                 nodes[second_next_node].update_flow(pipes[second_pipe].flow);
-                
-            }
-            else if nodes[i].connections == 3{
+            } else if nodes[i].connections == 3 {
                 let first_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[0]);
                 let second_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[1]);
                 let third_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[2]);
-                let first_pipe_flow = divide_flow_3_ways(pipes[first_pipe].diameter, pipes[second_pipe].diameter, pipes[third_pipe].diameter, nodes[i].flow);
-                let remaining_flow = nodes[i].flow -first_pipe_flow;
-                let second_pipe_flow = divide_flow_2_ways(pipes[second_pipe].diameter, pipes[third_pipe].diameter, remaining_flow);
+                let first_pipe_flow = divide_flow_3_ways(
+                    pipes[first_pipe].diameter,
+                    pipes[second_pipe].diameter,
+                    pipes[third_pipe].diameter,
+                    nodes[i].flow,
+                );
+                let remaining_flow = nodes[i].flow - first_pipe_flow;
+                let second_pipe_flow = divide_flow_2_ways(
+                    pipes[second_pipe].diameter,
+                    pipes[third_pipe].diameter,
+                    remaining_flow,
+                );
                 let third_pipe_flow = remaining_flow - second_pipe_flow;
                 pipes[first_pipe].update_flow(first_pipe_flow);
-                let first_veloctiy = get_velocity(pipes[first_pipe].flow, pipes[first_pipe].diameter);
+                let first_veloctiy =
+                    get_velocity(pipes[first_pipe].flow, pipes[first_pipe].diameter);
                 pipes[first_pipe].update_velocity(first_veloctiy);
                 pipes[second_pipe].update_flow(second_pipe_flow);
-                let second_velocity = get_velocity(pipes[second_pipe].flow, pipes[second_pipe].diameter);
+                let second_velocity =
+                    get_velocity(pipes[second_pipe].flow, pipes[second_pipe].diameter);
                 pipes[second_pipe].update_velocity(second_velocity);
                 pipes[third_pipe].update_flow(third_pipe_flow);
-                let third_veloctiy = get_velocity(pipes[third_pipe].flow, pipes[third_pipe].diameter);
+                let third_veloctiy =
+                    get_velocity(pipes[third_pipe].flow, pipes[third_pipe].diameter);
                 pipes[third_pipe].update_velocity(third_veloctiy);
 
-                let first_pressure_loss = pressure_loss(pipes[first_pipe].length, pipes[first_pipe].velocity, pipes[first_pipe].diameter);
+                let first_pressure_loss = pressure_loss(
+                    pipes[first_pipe].length,
+                    pipes[first_pipe].velocity,
+                    pipes[first_pipe].diameter,
+                );
                 let first_next_node_pressure = nodes[i].pressure - first_pressure_loss;
                 let first_next_node = find_node_index(nodes, pipes[first_pipe].end_node);
                 nodes[first_next_node].update_pressure(first_next_node_pressure);
                 nodes[first_next_node].update_flow(pipes[first_pipe].flow);
 
-                let second_pressure_loss = pressure_loss(pipes[second_pipe].length, pipes[second_pipe].velocity, pipes[second_pipe].diameter);
+                let second_pressure_loss = pressure_loss(
+                    pipes[second_pipe].length,
+                    pipes[second_pipe].velocity,
+                    pipes[second_pipe].diameter,
+                );
                 let second_next_node_pressure = nodes[i].pressure - second_pressure_loss;
                 let second_next_node = find_node_index(nodes, pipes[second_pipe].end_node);
                 nodes[second_next_node].update_pressure(second_next_node_pressure);
                 nodes[second_next_node].update_flow(pipes[second_pipe].flow);
 
-                let third_pressure_loss = pressure_loss(pipes[third_pipe].length, pipes[third_pipe].velocity, pipes[third_pipe].diameter);
+                let third_pressure_loss = pressure_loss(
+                    pipes[third_pipe].length,
+                    pipes[third_pipe].velocity,
+                    pipes[third_pipe].diameter,
+                );
                 let third_next_node_pressure = nodes[i].pressure - third_pressure_loss;
                 let third_next_node = find_node_index(nodes, pipes[third_pipe].end_node);
                 nodes[third_next_node].update_pressure(third_next_node_pressure);
                 nodes[third_next_node].update_flow(pipes[third_pipe].flow);
-            }
-            else{
+            } else {
                 eprintln!("Error: More than 3 pipes are leaving node {}, please revise the input file to valid pipe system.", nodes[i].node_number);
                 std::process::exit(1);
             }
         }
-
-
     }
 }

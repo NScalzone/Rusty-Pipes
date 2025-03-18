@@ -2,15 +2,14 @@ mod darcyweisbach;
 use csv::ReaderBuilder;
 use ndarray::Array2;
 use ndarray_csv::Array2Reader;
+use std::env;
 use std::error::Error;
 use std::fs::File;
-use std::env;
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 3{
-        eprintln!("Error: Please pass in two arguments, the starting pressure and the starting flow as float values, in that order.");
+    if args.len() != 3 {
+        eprintln!("Error: Please pass in two arguments, the starting pressure and the starting flow as whole numbers, in that order.");
         std::process::exit(1);
     }
 
@@ -18,8 +17,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let flow: f64 = args[2].parse().unwrap();
 
     println!("pressure: {} psi, flow: {} GPM", pressure, flow);
-
-
 
     let columns = 5;
     // Read an array back from the file
@@ -42,15 +39,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         let end_node = array_read[(i, 3)];
         let pipe_number = array_read[(i, 4)];
         let mut pipe_flow = 0.0;
-        if i == 0{
+        if i == 0 {
             pipe_flow = flow;
         }
-        let newpipe = darcyweisbach::pipe_constructor(pipe_number, pipe_length, diameter, 0.0, pipe_flow, start_node, end_node);
+        let newpipe = darcyweisbach::pipe_constructor(
+            pipe_number,
+            pipe_length,
+            diameter,
+            0.0,
+            pipe_flow,
+            start_node,
+            end_node,
+        );
         pipes.push(newpipe);
     }
 
-    for i in 0..pipes.len(){
-        
+    for i in 0..pipes.len() {
         let mut add_node = true;
         for k in &mut nodes {
             if k.node_number == pipes[i].start_node {
@@ -62,23 +66,28 @@ fn main() -> Result<(), Box<dyn Error>> {
             let node_number = pipes[i].start_node;
             let mut node_pressure = 0.0;
             let mut node_flow = 0.0;
-            if node_number == 1.0{
+            if node_number == 1.0 {
                 node_pressure = pressure;
                 node_flow = flow;
             }
             let connections = 1;
             let connecting_pipes = vec![pipes[i].pipe_number];
-            let newnode = darcyweisbach::node_constructor(node_number, node_pressure, node_flow, connections, connecting_pipes);
+            let newnode = darcyweisbach::node_constructor(
+                node_number,
+                node_pressure,
+                node_flow,
+                connections,
+                connecting_pipes,
+            );
             nodes.push(newnode);
         }
     }
 
-    for i in 0..pipes.len(){
+    for i in 0..pipes.len() {
         let mut add_node = true;
         for k in &mut nodes {
             if k.node_number == pipes[i].end_node {
                 add_node = false;
-
             }
         }
         if add_node {
@@ -87,58 +96,27 @@ fn main() -> Result<(), Box<dyn Error>> {
             let node_flow = 0.0;
             let connections = 1;
             let connecting_pipes = vec![pipes[i].pipe_number];
-            let newnode = darcyweisbach::node_constructor(node_number, node_pressure, node_flow, connections, connecting_pipes);
+            let newnode = darcyweisbach::node_constructor(
+                node_number,
+                node_pressure,
+                node_flow,
+                connections,
+                connecting_pipes,
+            );
             nodes.push(newnode);
         }
     }
 
     darcyweisbach::calculate_system(&mut pipes, &mut nodes);
 
-    for i in 0..pipes.len(){
+    for i in 0..pipes.len() {
         darcyweisbach::display_pipe(&pipes[i]);
     }
-    for i in 0..nodes.len(){
+    for i in 0..nodes.len() {
         darcyweisbach::display_node(&nodes[i]);
     }
 
-    // let mut system = Vec::with_capacity(rows);
-    // system.push(1);
-    // system.push(2);
-    // for i in system {
-    //     println!("{}", i);
-    // }
-    // let mut testnode = darcyweisbach::node_constructor(1.0, 0.0, 0.0, 2, vec![1.0,2.0]);
-    // let mut testnode2 = darcyweisbach::node_constructor(2.0,0.0, 0.0, 2, vec![4.0,5.0]);
-    // darcyweisbach::display_node(&testnode);
-    // testnode.update_flow(2.0);
-    // testnode.update_pressure(35.0);
-    // testnode.add_connection(3.0);
-    // darcyweisbach::display_node(&testnode);
-
-    // println!("Creating vector of nodes");
-
-    // let mut system: Vec<darcyweisbach::Node> = Vec::new();
-    // let mut nodenum = 1.0;
-    // for i in 0..4 {
-    //     let mut testnode = darcyweisbach::node_constructor(nodenum, 0.0, 0.0, 2, vec![1.0, 2.0]);
-    //     system.push(testnode);
-    //     nodenum += 1.0;
-    // }
-
-    // system.push(testnode2);
-
-    // for j in 0..4 {
-    //     darcyweisbach::display_node(&system[j]);
-    // }
-
-    // for k in system {
-    //     if k.node_number == 1.0 {
-    //         println!("found node 1")
-    //     }
-    // }
-
     Ok(())
-
 
     // Ensure that we got the original array back
 
