@@ -31,14 +31,15 @@ pub fn node_constructor(
     connections: usize,
     connecting_pipes: Vec<f64>,
 ) -> Node {
-    let temp = Node {
+    // let temp = 
+    Node {
         node_number,
         pressure,
         flow,
         connections,
         connecting_pipes,
-    };
-    temp
+    }
+    // temp
 }
 
 #[derive(Clone)]
@@ -70,7 +71,8 @@ pub fn pipe_constructor(
     start_node: f64,
     end_node: f64,
 ) -> Pipe {
-    let temp = Pipe {
+    // let temp = 
+    Pipe {
         pipe_number,
         length,
         diameter,
@@ -78,8 +80,8 @@ pub fn pipe_constructor(
         flow,
         start_node,
         end_node,
-    };
-    temp
+    }
+    // temp
 }
 
 pub fn display_node(node: &Node) {
@@ -117,15 +119,13 @@ pub fn display_pipe(pipe: &Pipe) {
 
 // This function takes a flow-rate in Gallons per minute and converts to cubic feet per second
 fn convert_flowrate(flow: f64) -> f64 {
-    let cubic_feet_per_second = (flow * 0.1337) / 60.0;
-    cubic_feet_per_second
+    (flow * 0.1337) / 60.0
 }
 
 // This takes in a diameter in inches, and returns an area in square feet
 fn get_area(diameter: f64) -> f64 {
     let pi = f64::consts::PI;
-    let area = 0.00694 * pi * ((diameter / 2.0) * (diameter / 2.0));
-    area
+    0.00694 * pi * ((diameter / 2.0) * (diameter / 2.0))
 }
 
 // This takes in a flow rate in Gallons per Minute, and an diameter in inches, and returns velocity in feet per second
@@ -134,8 +134,8 @@ pub fn get_velocity(flow: f64, diameter: f64) -> f64 {
     let area = get_area(diameter);
     // get flow in cubic feet per second
     let cfs_flow = convert_flowrate(flow);
-    let velocity = cfs_flow / area;
-    velocity
+    cfs_flow / area
+
 }
 
 // This takes length in feet, velocity in ft/s, diameter in inches and returns head loss in feet of head
@@ -158,24 +158,24 @@ pub fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
     let numerator = ((roughness / diameter) / 3.7) + (5.74 / reynolds_number.powf(0.9));
     let friction = 0.25 / ((numerator.log10()) * (numerator.log10()));
     // println!("friciton is {}", friction);
-    let pressure_loss = length * (friction * (rho / 2.0) * ((velocity * velocity) / diameter));
-    pressure_loss
+    length * (friction * (rho / 2.0) * ((velocity * velocity) / diameter))
+    
 }
 
-fn find_pipe_index(pipes: &Vec<Pipe>, pipe_number: f64) -> usize {
+fn find_pipe_index(pipes: &[Pipe], pipe_number: f64) -> usize {
     let mut index: usize = 0;
-    for i in 0..pipes.len() {
-        if pipes[i].pipe_number == pipe_number {
+    for (i, pipe) in pipes.iter().enumerate() {
+        if pipe.pipe_number == pipe_number {
             index = i;
         }
     }
     index
 }
 
-fn find_node_index(nodes: &Vec<Node>, node_number: f64) -> usize {
+fn find_node_index(nodes: &[Node], node_number: f64) -> usize {
     let mut index: usize = 0;
-    for i in 0..nodes.len() {
-        if nodes[i].node_number == node_number {
+    for (i, node) in nodes.iter().enumerate() {
+        if node.node_number == node_number {
             index = i;
         }
     }
@@ -187,8 +187,7 @@ fn divide_flow_2_ways(diameter1: f64, diameter2: f64, flow: f64) -> f64 {
     let area2 = get_area(diameter2);
     let total_area = area1 + area2;
     let pipe_1_percentage = area1 / total_area;
-    let pipe_1_flow = flow * pipe_1_percentage;
-    pipe_1_flow
+    flow * pipe_1_percentage
 }
 
 fn divide_flow_3_ways(diameter1: f64, diameter2: f64, diameter3: f64, flow: f64) -> f64 {
@@ -197,11 +196,10 @@ fn divide_flow_3_ways(diameter1: f64, diameter2: f64, diameter3: f64, flow: f64)
     let area3 = get_area(diameter3);
     let total_area = area1 + area2 + area3;
     let pipe_1_percentage = area1 / total_area;
-    let pipe_1_flow = flow * pipe_1_percentage;
-    pipe_1_flow
+    flow * pipe_1_percentage
 }
 
-pub fn calculate_system(pipes: &mut Vec<Pipe>, nodes: &mut Vec<Node>) {
+pub fn calculate_system(pipes: &mut [Pipe], nodes: &mut [Node]) {
     for i in 0..nodes.len() {
         // node 1 will have pressure/flow values
         if nodes[i].connections == 1 {
@@ -261,7 +259,8 @@ pub fn calculate_system(pipes: &mut Vec<Pipe>, nodes: &mut Vec<Node>) {
                 let second_next_node = find_node_index(nodes, pipes[second_pipe].end_node);
                 nodes[second_next_node].update_pressure(second_next_node_pressure);
                 nodes[second_next_node].update_flow(pipes[second_pipe].flow);
-            } else if nodes[i].connections == 3 {
+            } else {
+                if nodes[i].connections == 3 {
                 let first_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[0]);
                 let second_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[1]);
                 let third_pipe = find_pipe_index(pipes, nodes[i].connecting_pipes[2]);
@@ -320,9 +319,11 @@ pub fn calculate_system(pipes: &mut Vec<Pipe>, nodes: &mut Vec<Node>) {
                 let third_next_node = find_node_index(nodes, pipes[third_pipe].end_node);
                 nodes[third_next_node].update_pressure(third_next_node_pressure);
                 nodes[third_next_node].update_flow(pipes[third_pipe].flow);
+            
             } else {
-                eprintln!("Error: More than 3 pipes are leaving node {}, please revise the input file to valid pipe system.", nodes[i].node_number);
-                std::process::exit(1);
+                    eprintln!("Error: More than 3 pipes are leaving node {}, please revise the input file to valid pipe system.", nodes[i].node_number);
+                    std::process::exit(1);
+            }
             }
         }
     }

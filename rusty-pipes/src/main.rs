@@ -54,16 +54,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         pipes.push(newpipe);
     }
 
-    for i in 0..pipes.len() {
+    for pipe in &pipes {
         let mut add_node = true;
         for k in &mut nodes {
-            if k.node_number == pipes[i].start_node {
+            if k.node_number == pipe.start_node {
                 add_node = false;
-                k.add_connection(pipes[i].pipe_number);
+                k.add_connection(pipe.pipe_number);
             }
         }
         if add_node {
-            let node_number = pipes[i].start_node;
+            let node_number = pipe.start_node;
             let mut node_pressure = 0.0;
             let mut node_flow = 0.0;
             if node_number == 1.0 {
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 node_flow = flow;
             }
             let connections = 1;
-            let connecting_pipes = vec![pipes[i].pipe_number];
+            let connecting_pipes = vec![pipe.pipe_number];
             let newnode = darcyweisbach::node_constructor(
                 node_number,
                 node_pressure,
@@ -83,19 +83,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    for i in 0..pipes.len() {
+    for pipe in &pipes {
         let mut add_node = true;
         for k in &mut nodes {
-            if k.node_number == pipes[i].end_node {
+            if k.node_number == pipe.end_node {
                 add_node = false;
             }
         }
         if add_node {
-            let node_number = pipes[i].end_node;
+            let node_number = pipe.end_node;
             let node_pressure = 0.0;
             let node_flow = 0.0;
             let connections = 1;
-            let connecting_pipes = vec![pipes[i].pipe_number];
+            let connecting_pipes = vec![pipe.pipe_number];
             let newnode = darcyweisbach::node_constructor(
                 node_number,
                 node_pressure,
@@ -109,11 +109,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     darcyweisbach::calculate_system(&mut pipes, &mut nodes);
 
-    for i in 0..pipes.len() {
-        darcyweisbach::display_pipe(&pipes[i]);
+    // for i in 0..pipes.len() {
+    //     darcyweisbach::display_pipe(&pipes[i]);
+    // }
+    for pipe in &pipes {
+        darcyweisbach::display_pipe(pipe);
     }
-    for i in 0..nodes.len() {
-        darcyweisbach::display_node(&nodes[i]);
+    for node in &nodes {
+        darcyweisbach::display_node(node);
     }
 
     Ok(())
