@@ -16,21 +16,24 @@ fn main() -> Result<(), Box<dyn Error>> {
     let pressure: f64 = args[1].parse().unwrap();
     let flow: f64 = args[2].parse().unwrap();
 
-    println!("pressure: {} psi, flow: {} GPM", pressure, flow);
+    println!(
+        "Starting Pressure: {} psi, Starting Flow: {} GPM",
+        pressure, flow
+    );
 
     let columns = 5;
+
     // Read an array back from the file
     let file = File::open("/Users/nicholasscalzone/Documents/COMPUTER SCIENCE CLASSES/Rust Programming/Rusty-Pipes/rusty-pipes/pipedata.csv")?;
     let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
     let array_read: Array2<f64> = reader.deserialize_array2_dynamic()?;
 
+    // Initialize vectors to store pipe and node data
     let mut nodes: Vec<darcyweisbach::Node> = Vec::new();
     let mut pipes: Vec<darcyweisbach::Pipe> = Vec::new();
-    // println!("{}", array_read);
-    // println!("{}", array_read.len());
     let total_vals = array_read.len();
     let rows: usize = total_vals / columns;
-    // println!("{} rows, {} columns", rows, columns);
+
     // Read data into pipe vector
     for i in 0..rows {
         let start_node = array_read[(i, 0)];
@@ -54,6 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         pipes.push(newpipe);
     }
 
+    // Read data into nodes vector
     for pipe in &pipes {
         let mut add_node = true;
         for k in &mut nodes {
@@ -83,6 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    // Add end_node data to pipes
     for pipe in &pipes {
         let mut add_node = true;
         for k in &mut nodes {
@@ -107,36 +112,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    // Run the calculation for the pipe system
     darcyweisbach::calculate_system(&mut pipes, &mut nodes);
 
-    // for i in 0..pipes.len() {
-    //     darcyweisbach::display_pipe(&pipes[i]);
-    // }
+    // Output the pipe and node data for the user
     for pipe in &pipes {
         darcyweisbach::display_pipe(pipe);
     }
+    println!();
     for node in &nodes {
         darcyweisbach::display_node(node);
     }
 
     Ok(())
-
-    // Ensure that we got the original array back
-
-    // let flow = 38.0975;
-    // println!("Starting with {} GPM", flow);
-    // let pipe_diameter = 2.0;
-    // let pipe_length = 500.0;
-
-    // let foot_flow = darcyweisbach::convert_flowrate(flow);
-    // let area = darcyweisbach::get_area(pipe_diameter);
-    // let velocity = darcyweisbach::get_velocity(foot_flow, area);
-    // let friction = 0.015;
-    // let head_loss = darcyweisbach::head_loss(pipe_length, velocity, pipe_diameter, friction);
-    // let pressure_loss = darcyweisbach::pressure_loss(pipe_length, velocity, pipe_diameter);
-    // println!("In cubic feet per second, that is: {}",foot_flow);
-    // println!("For an diameter of {} inches, area is {}", pipe_diameter, area);
-    // println!("Velocity in the pipe is {}ft/s", velocity);
-    // println!("Head loss in the pipe is {}ft", head_loss);
-    // println!("Pressure loss is {}psi", pressure_loss);
 }
