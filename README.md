@@ -18,6 +18,8 @@ Start Node | Pipe Length | Pipe Diameter | End Node | Pipe Number
 3.0        | 100.0       | 0.75          | 5.0      | 4.0
 -----------------------------------------------------------------
 
+Important! Column headings are included in this example for reference only. Do not include the column headings in your csv file. Refer to the file in this repo for a working example, feel free to modify that file to your needs after you clone the repo.
+
 As you can see, this allows a pipe model to be developed node-to-node. The program will exit with error if more than 3 pipes leave a node, as it is unlikely to have a fitting that creates a junction of more than 4 total pipes (1 in, 3 out). The pressure and flow values from the command line input will be assigned to the first node, and the system will calculate node to node from there, balancing the flows based on the area ratio of the pipes leaving a node when a node with more than one pipe leaving it is encountered.
 
 The program is calibrated for standard carbon steel pipe. A future expansion to include pipe roughness data for other pipe materials would make this a more versatile program.
