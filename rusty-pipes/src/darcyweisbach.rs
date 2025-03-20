@@ -10,20 +10,24 @@ pub struct Node {
     pub connecting_pipes: Vec<f64>,
 }
 impl Node {
-    pub fn update_flow(&mut self, to_add: f64) {
+    // Update the flow at a node
+    fn update_flow(&mut self, to_add: f64) {
         self.flow += to_add;
     }
 
-    pub fn update_pressure(&mut self, to_add: f64) {
+    // Update the pressure at a node
+    fn update_pressure(&mut self, to_add: f64) {
         self.pressure += to_add;
     }
 
+    // Add a connection to a node
     pub fn add_connection(&mut self, pipe_to_add: f64) {
         self.connections += 1;
         self.connecting_pipes.push(pipe_to_add);
     }
 }
 
+// Construtor function for node struct
 pub fn node_constructor(
     node_number: f64,
     pressure: f64,
@@ -40,6 +44,7 @@ pub fn node_constructor(
     }
 }
 
+// Struct to hold all of the data for a pipe in the system
 #[derive(Clone)]
 pub struct Pipe {
     pub pipe_number: f64,
@@ -51,15 +56,18 @@ pub struct Pipe {
     pub end_node: f64,
 }
 impl Pipe {
-    pub fn update_flow(&mut self, to_add: f64) {
+    // Function to update the flow in a pipe
+    fn update_flow(&mut self, to_add: f64) {
         self.flow += to_add;
     }
 
-    pub fn update_velocity(&mut self, to_add: f64) {
+    // Function to update the velocity in a pipe
+    fn update_velocity(&mut self, to_add: f64) {
         self.velocity += to_add;
     }
 }
 
+// Pipe struct constructor
 pub fn pipe_constructor(
     pipe_number: f64,
     length: f64,
@@ -80,6 +88,7 @@ pub fn pipe_constructor(
     }
 }
 
+// Function to display node data
 pub fn display_node(node: &Node) {
     println!(
         "Node Number: {}
@@ -94,6 +103,7 @@ pub fn display_node(node: &Node) {
     }
 }
 
+// Function to display pipe data
 pub fn display_pipe(pipe: &Pipe) {
     println!(
         "pipe_number: {}
@@ -117,6 +127,12 @@ pub fn display_pipe(pipe: &Pipe) {
 fn convert_flowrate(flow: f64) -> f64 {
     (flow * 0.1337) / 60.0
 }
+#[test]
+fn test_convert_flowrate() {
+    let testflow = 10.0; // test flow of 10 GPM
+    let test_cfs_flow = convert_flowrate(testflow);
+    assert_eq!(0.022283333333333336, test_cfs_flow);
+}
 
 // This takes in a diameter in inches, and returns an area in square feet
 fn get_area(diameter: f64) -> f64 {
@@ -124,8 +140,15 @@ fn get_area(diameter: f64) -> f64 {
     0.00694 * pi * ((diameter / 2.0) * (diameter / 2.0))
 }
 
+#[test]
+fn test_get_area() {
+    let test_diameter = 2.0; // test diameter of 2"
+    let test_area = get_area(test_diameter);
+    assert_eq!(0.021802653015913165, test_area);
+}
+
 // This takes in a flow rate in Gallons per Minute, and an diameter in inches, and returns velocity in feet per second
-pub fn get_velocity(flow: f64, diameter: f64) -> f64 {
+fn get_velocity(flow: f64, diameter: f64) -> f64 {
     // get area in square feet
     let area = get_area(diameter);
     // get flow in cubic feet per second
@@ -133,8 +156,16 @@ pub fn get_velocity(flow: f64, diameter: f64) -> f64 {
     cfs_flow / area
 }
 
+#[test]
+fn test_get_velocity() {
+    let test_diameter = 2.0; // test diameter 2"
+    let test_flow = 10.0; // test flow 10 GPM
+    let test_velocity = get_velocity(test_flow, test_diameter);
+    assert_eq!(1.0220468727851302, test_velocity);
+}
+
 // Application of the Darcy-Weisbach equation to find pressure loss across the pipe.
-pub fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
+fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
     let rho = 0.0361; // density of water in lb/in^3
     let mew = 0.000020337; //dynamic viscosity lbf*s/ft^2, from https://www.engineeringtoolbox.com/water-dynamic-kinematic-viscosity-d_596.html
     let reynolds_number = (rho * velocity * (diameter)) / (mew / 144.0);
@@ -143,7 +174,17 @@ pub fn pressure_loss(length: f64, velocity: f64, diameter: f64) -> f64 {
     let friction = 0.25 / ((numerator.log10()) * (numerator.log10()));
     length * (friction * (rho / 2.0) * ((velocity * velocity) / diameter))
 }
+#[test]
+fn test_pressure_loss() {
+    let test_diameter = 2.0; // test diameter 2"
+    let test_flow = 10.0; // test flow 10 GPM
+    let test_length = 100.0; // test pipe length 100'
+    let test_velocity = get_velocity(test_flow, test_diameter);
+    let test_pressure_loss = pressure_loss(test_length, test_velocity, test_diameter);
+    assert_eq!(0.013842447133685504, test_pressure_loss);
+}
 
+// Function to find the index in the list of pipes for a specific pipe number
 fn find_pipe_index(pipes: &[Pipe], pipe_number: f64) -> usize {
     let mut index: usize = 0;
     for (i, pipe) in pipes.iter().enumerate() {
@@ -154,6 +195,7 @@ fn find_pipe_index(pipes: &[Pipe], pipe_number: f64) -> usize {
     index
 }
 
+// Function to find the index in the list of nodes for a specific node number
 fn find_node_index(nodes: &[Node], node_number: f64) -> usize {
     let mut index: usize = 0;
     for (i, node) in nodes.iter().enumerate() {
@@ -164,6 +206,7 @@ fn find_node_index(nodes: &[Node], node_number: f64) -> usize {
     index
 }
 
+// function to return the first pipe's flow in a 2-way junction
 fn divide_flow_2_ways(diameter1: f64, diameter2: f64, flow: f64) -> f64 {
     let area1 = get_area(diameter1);
     let area2 = get_area(diameter2);
@@ -172,6 +215,7 @@ fn divide_flow_2_ways(diameter1: f64, diameter2: f64, flow: f64) -> f64 {
     flow * pipe_1_percentage
 }
 
+// Function to return the first pipe's flow in a 3-way junction
 fn divide_flow_3_ways(diameter1: f64, diameter2: f64, diameter3: f64, flow: f64) -> f64 {
     let area1 = get_area(diameter1);
     let area2 = get_area(diameter2);
@@ -181,6 +225,7 @@ fn divide_flow_3_ways(diameter1: f64, diameter2: f64, diameter3: f64, flow: f64)
     flow * pipe_1_percentage
 }
 
+// System calculation main function
 pub fn calculate_system(pipes: &mut [Pipe], nodes: &mut [Node]) {
     for i in 0..nodes.len() {
         // node 1 will have pressure/flow values

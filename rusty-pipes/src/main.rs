@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let pressure: f64 = args[1].parse().unwrap();
     let flow: f64 = args[2].parse().unwrap();
 
+    // Output the starting presssure and flow
     println!(
         "Starting Pressure: {} psi, Starting Flow: {} GPM",
         pressure, flow
